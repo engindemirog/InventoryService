@@ -15,6 +15,13 @@ using NArchitecture.Core.ElasticSearch.Models;
 using NArchitecture.Core.Localization.Resource.Yaml.DependencyInjection;
 using NArchitecture.Core.Mailing;
 using NArchitecture.Core.Mailing.MailKit;
+using Application.Services.Brands;
+using Application.Services.Fuels;
+using Application.Services.Transmissions;
+using Application.Services.Models;
+using Application.Services.Cars;
+using MassTransit;
+using Application.Features.Cars.Consumers;
 
 namespace Application;
 
@@ -50,6 +57,23 @@ public static class ApplicationServiceRegistration
 
         services.AddYamlResourceLocalization();
 
+
+        services.AddScoped<IBrandService, BrandManager>();
+        services.AddScoped<IFuelService, FuelManager>();
+        services.AddScoped<ITransmissionService, TransmissionManager>();
+        services.AddScoped<IModelService, ModelManager>();
+        services.AddScoped<ICarService, CarManager>();
+
+        services.AddMassTransit(x =>
+        {
+            x.AddConsumersFromNamespaceContaining<RentalCreatedConsumer>();
+
+            x.UsingRabbitMq((context, cfg) =>
+            {
+                cfg.ConfigureEndpoints(context);
+
+            });
+        });
 
         return services;
     }
